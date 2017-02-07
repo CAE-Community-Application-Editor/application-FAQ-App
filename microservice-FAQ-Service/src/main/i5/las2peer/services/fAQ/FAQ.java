@@ -93,7 +93,7 @@ public class FAQ extends RESTService {
    * 
    * postFAQ
    * 
-   *
+   * @param data a JSONObject 
    * 
    * @return Response  
    * 
@@ -106,15 +106,30 @@ public class FAQ extends RESTService {
        @ApiResponse(code = HttpURLConnection.HTTP_OK, message = "faqResponse")
   })
   @ApiOperation(value = "postFAQ", notes = " ")
-  public Response postFAQ() {
+  public Response postFAQ(String data) {
+    JSONObject data_JSON = (JSONObject) JSONValue.parse(data);
 
-    // faqResponse
-    boolean faqResponse_condition = true;
-    if(faqResponse_condition) {
-      String faqResult = "Frequently asked question submitted.";
-      return Response.status(HttpURLConnection.HTTP_OK).entity(faqResult).build();
+    try {
+        String question = (String) data_JSON.get("question"); 
+        String answer = (String) data_JSON.get("answer");
+        Connection conn = service.dbm.getConnection();
+        PreparedStatement stmnt = conn.prepareStatement("INSERT INTO faq  (question, answer) VALUES (?,?)");
+        stmnt.setString(1, question); 
+        stmnt.setString(2, answer);
+        stmnt.executeUpdate();
+        JSONObject result = new JSONObject();
+        result.put("message", "successfully added Question: '"+question +"'");
+        return Response.status(HttpURLConnection.HTTP_OK).entity(result.toJSONString()).build();
+    } catch (Exception e) { 
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = new PrintWriter(sw);
+        e.printStackTrace(pw);
+        JSONObject result = new JSONObject(); 
+        result.put("error", e.toString()); 
+        result.put("args", trophy); 
+        result.put("trace", sw.toString());
+        return Response.status(HttpURLConnection.HTTP_INTERNAL_ERROR).entity(result.toJSONString()).build();
     }
-    return null;
   }
 
   /**
@@ -137,12 +152,28 @@ public class FAQ extends RESTService {
   public Response getFAQ() {
 
     // faqResponse
-    boolean faqResponse_condition = true;
-    if(faqResponse_condition) {
-      JSONObject faqResut = new JSONObject();
-      return Response.status(HttpURLConnection.HTTP_OK).entity(faqResut.toJSONString()).build();
+    try {
+        Connection conn = service.dbm.getConnection();
+        PreparedStatement stmnt = conn.prepareStatement("SELECT id, question,answer FROM faq");
+        ResultSet rs = stmnt.executeQuery();
+        JSONArray result = new JSONArray();
+        while (rs.next()) { 
+            JSONObject obj = new JSONObject();
+            obj.put("id", rs.getInt(1));
+            obj.put("question", rs.getString(2)); 
+            obj.put("answer",rs.getString(3));
+            result.add(obj);
+        }
+        return Response.status(HttpURLConnection.HTTP_OK).entity(result.toJSONString()).build();
+    } catch (Exception e) { 
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = new PrintWriter(sw);
+        e.printStackTrace(pw);
+        JSONObject result = new JSONObject(); 
+        result.put("error", e.toString()); 
+        result.put("trace", sw.toString());
+        return Response.status(HttpURLConnection.HTTP_INTERNAL_ERROR).entity(result.toJSONString()).build();
     }
-    return null;
   }
 
 
