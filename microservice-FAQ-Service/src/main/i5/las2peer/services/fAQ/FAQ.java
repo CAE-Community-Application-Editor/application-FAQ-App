@@ -126,7 +126,7 @@ public class FAQ extends RESTService {
         e.printStackTrace(pw);
         JSONObject result = new JSONObject(); 
         result.put("error", e.toString()); 
-        result.put("args", trophy); 
+        result.put("args", data); 
         result.put("trace", sw.toString());
         return Response.status(HttpURLConnection.HTTP_INTERNAL_ERROR).entity(result.toJSONString()).build();
     }
